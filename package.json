@@ -1,6 +1,6 @@
 {
   "name": "diversity",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Diversity statistics for a population, including richness and evenness.",
   "main": "diversity.js",
   "scripts": {
