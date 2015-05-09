@@ -1,44 +1,49 @@
 /// <reference path="../typings/node/node.d.ts"/>
 /// <reference path="../typings/mocha/mocha.d.ts"/>
 /// <reference path="../typings/chai/chai.d.ts"/>
-interface Reducer<T> { (ts: T[]): T }
-interface Mapper<T> { (ts: T[]): T[] }
-
 const expect = require('chai').expect;
-const diversity: Reducer<number> = require('../diversity').diversity;
-const richness: Reducer<number> = require('../diversity').richness;
-const normalize: Mapper<number> = require('../diversity').normalize;
 
-const tolerance = .000000001;
+import { diversity, richness, normalize, evenness } from '../diversity';
+
 
 describe('diversity', function() {
-  const testCases: Fn1Test<number[], number>[] = [
-      [[1],                  1, 'just 1']
-    , [[.5, .5],             2, 'halved']
-    , [[.2, .2, .2, .2, .2], 5, '5-way split']
+  const tests: Fn1Test<number[], number>[] = [
+  //  input               expected   description
+      [[1],                  1,      'just 1']
+    , [[.5, .5],             2,      'halved']
+    , [[50, 50],             2,      '50/50 unnormalized']
+    , [[.2, .2, .2, .2, .2], 5,      '5-way split']
   ];
 
-  runFunction1Tests(richness, testCases, function(expected, actual) {
-    expect(actual).to.be.closeTo(expected, tolerance);
-  });
+  runFunction1Tests(diversity, closeEnough, tests);
 });
 
 describe('richness', function() {
-  const testCases: Fn1Test<number[], number>[] = [
-      [[1],                  1, 'just 1']
-    , [[.5, .5],             2, 'halved']
-    , [[10, 5, 5],           3, '3 numbers']
+  const tests: Fn1Test<number[], number>[] = [
+    //  input             expected     description
+      [[1],                  1,        'just 1']
+    , [[.5, .5],             2]
+    , [[10, 5, 5],           3,        '3 numbers']
     , [[.2, .2, .2, .2, .2], 5]
   ];
 
-  runFunction1Tests(richness, testCases, function(expected, actual) {
-    expect(actual).to.be.closeTo(expected, tolerance);
-  });
+  runFunction1Tests(richness, closeEnough, tests);
+});
+
+describe('evenness', function() {
+  const tests: Fn1Test<number[], number>[] = [
+      [[1],                  1, 'just 1 is perfectly even']
+    , [[.5, .5],             1, 'halved is perfectly even']
+    , [[50, 50],             1, '50/50 is perfectly even']
+    //, [[10, 5, 5],           1, 'uneven numbers']
+    , [[.2, .2, .2, .2, .2], 1, '5-way split is perfectly even']
+  ];
+
+  runFunction1Tests(evenness, closeEnough, tests);
 });
 
 describe('normalize', function() {
-
-  const testCases: Fn1Test<number[], number[]>[] = [
+  const tests: Fn1Test<number[], number[]>[] = [
       [[1],        [1],            'just 1']
     , [[.5, .5],   [.5, .5],       'halved']
     , [[50, 50],   [.5, .5],       '50/50']
@@ -46,31 +51,33 @@ describe('normalize', function() {
     , [[10, 5, 5], [.5, .25, .25], '3 numbers']
   ];
 
-  runFunction1Tests(normalize, testCases, function(expected, actual) {
-    expect(actual).to.have.members(expected);
-  });
-
+  runFunction1Tests(normalize, matchesStructure, tests);
 });
 
 ////////////////////////////////
+const tolerance = .000000001;
+function closeEnough(expected, actual) {
+  expect(actual).to.be.closeTo(expected, tolerance);
+}
+
+function matchesStructure(expected, actual) {
+  expect(actual).to.have.members(expected);
+}
 
 function runFunction1Test<A, Result>(subject: Fn1<A, Result>,
-                                     test: Fn1Test<A, Result>,
-                                     assertion: (expected: Result, actual: Result) => void) {
+                                     assertion: (expected: Result, actual: Result) => void,
+                                     test: Fn1Test<A, Result>) {
   // sweet destructuring action
   const [ input, expected, description ] = test;
   const actual = subject(input);
-  const stringify = JSON.stringify;
-  const expectation = `${ stringify(input) } => ${ stringify(expected) }`;
-  describe(description || expectation, function () {
-    it(expectation, () => assertion(expected, actual));
-  });
+  const expectation = `${ JSON.stringify(input) } => ${ JSON.stringify(expected) }`;
+  it(description || expectation, () => assertion(expected, actual));
 }
 
 function runFunction1Tests<A, Result>(subject: Fn1<A, Result>,
-                                      tests: Fn1Test<A, Result>[],
-                                      assertion: (expected: Result, actual: Result) => void) {
-  tests.forEach(test => runFunction1Test(subject, test, assertion));
+                                      assertion: (expected: Result, actual: Result) => void,
+                                      tests: Fn1Test<A, Result>[]) {
+  tests.forEach(test => runFunction1Test(subject, assertion, test));
 }
 
 interface Fn1<A, Result> { (a: A): Result }
