@@ -1,7 +1,7 @@
 /// <reference path="../typings/node/node.d.ts"/>
 /// <reference path="../typings/mocha/mocha.d.ts"/>
 /// <reference path="../typings/chai/chai.d.ts"/>
-var expect = require('chai').expect;
+var chai_1 = require('chai');
 var diversity_1 = require('../diversity');
 describe('diversity', function () {
     var tests = [
@@ -40,22 +40,19 @@ describe('normalize', function () {
         [[80, 20], [.8, .2], 'Pareto'],
         [[10, 5, 5], [.5, .25, .25], '3 numbers']
     ];
-    runFunction1Tests(diversity_1.normalize, matchesStructure, tests);
+    runFunction1Tests(diversity_1.normalize, chai_1.assert.deepEqual, tests);
 });
 ////////////////////////////////
 var tolerance = .000000001;
 function closeEnough(expected, actual) {
-    expect(actual).to.be.closeTo(expected, tolerance);
-}
-function matchesStructure(expected, actual) {
-    expect(actual).to.have.members(expected);
+    chai_1.expect(actual).to.be.closeTo(expected, tolerance);
 }
 function runFunction1Test(subject, assertion, test) {
     // sweet destructuring action
     var input = test[0], expected = test[1], description = test[2];
     var actual = subject(input);
     var expectation = JSON.stringify(input) + " => " + JSON.stringify(expected);
-    it(description || expectation, function () { return assertion(expected, actual); });
+    it(description || expectation, function () { return assertion(actual, expected); });
 }
 function runFunction1Tests(subject, assertion, tests) {
     tests.forEach(function (test) { return runFunction1Test(subject, assertion, test); });

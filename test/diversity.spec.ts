@@ -1,10 +1,8 @@
 /// <reference path="../typings/node/node.d.ts"/>
 /// <reference path="../typings/mocha/mocha.d.ts"/>
 /// <reference path="../typings/chai/chai.d.ts"/>
-const expect = require('chai').expect;
-
+import { expect, assert } from 'chai';
 import { diversity, richness, normalize, evenness } from '../diversity';
-
 
 describe('diversity', function() {
   const tests: Fn1Test<number[], number>[] = [
@@ -51,17 +49,13 @@ describe('normalize', function() {
     , [[10, 5, 5], [.5, .25, .25], '3 numbers']
   ];
 
-  runFunction1Tests(normalize, matchesStructure, tests);
+  runFunction1Tests(normalize, assert.deepEqual, tests);
 });
 
 ////////////////////////////////
 const tolerance = .000000001;
 function closeEnough(expected, actual) {
   expect(actual).to.be.closeTo(expected, tolerance);
-}
-
-function matchesStructure(expected, actual) {
-  expect(actual).to.have.members(expected);
 }
 
 function runFunction1Test<A, Result>(subject: Fn1<A, Result>,
@@ -71,7 +65,7 @@ function runFunction1Test<A, Result>(subject: Fn1<A, Result>,
   const [ input, expected, description ] = test;
   const actual = subject(input);
   const expectation = `${ JSON.stringify(input) } => ${ JSON.stringify(expected) }`;
-  it(description || expectation, () => assertion(expected, actual));
+  it(description || expectation, () => assertion(actual, expected));
 }
 
 function runFunction1Tests<A, Result>(subject: Fn1<A, Result>,
